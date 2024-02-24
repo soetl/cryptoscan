@@ -13,7 +13,7 @@ pub(crate) enum RepoCreateError {
 }
 
 #[derive(Error, Debug)]
-pub(crate) enum RepoSelectError {
+pub(crate) enum RepoFindOneError {
     #[error("Not found")]
     NotFound,
     #[error("Unknown error: {0}")]
@@ -46,14 +46,22 @@ pub(crate) enum RepoDeleteError {
     Unknown(String),
 }
 
+#[derive(Error, Debug)]
+pub(crate) enum RepoGetAllError {
+    #[error("Unknown error: {0}")]
+    Unknown(String),
+}
+
 pub(crate) trait Repository<T, U>
 where
     T: Entity,
     U: Entity,
 {
     async fn create(&mut self, entity: T) -> Result<T, RepoCreateError>;
-    async fn find_one(&mut self, entity: U) -> Result<T, RepoSelectError>;
+    async fn find_one(&mut self, entity: U) -> Result<T, RepoFindOneError>;
     async fn find_all(&mut self, entity: U) -> Result<Vec<T>, RepoFindAllError>;
     async fn update(&mut self, entity: T) -> Result<T, RepoUpdateError>;
     async fn delete(&mut self, entity: U) -> Result<(), RepoDeleteError>;
+    async fn delete_all(&mut self) -> Result<(), RepoDeleteError>;
+    async fn get_all(&mut self) -> Result<Vec<T>, RepoGetAllError>;
 }

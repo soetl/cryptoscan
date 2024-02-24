@@ -7,7 +7,7 @@ use crate::{
     driven::repository::{RepoCreateError, Repository},
 };
 
-use super::{RepoDeleteError, RepoFindAllError, RepoSelectError, RepoUpdateError};
+use super::{RepoDeleteError, RepoFindAllError, RepoGetAllError, RepoFindOneError, RepoUpdateError};
 
 pub(crate) const SQLITE_LOCAL_PATH: &str = "databases";
 pub(crate) const SQLITE_FILE: &str = "data.db";
@@ -150,11 +150,11 @@ impl Repository<Coin, u32> for SqliteRepository {
         }
     }
 
-    async fn find_one(&mut self, entity: u32) -> Result<Coin, RepoSelectError> {
+    async fn find_one(&mut self, entity: u32) -> Result<Coin, RepoFindOneError> {
         let mut conn = self
             .conn()
             .await
-            .map_err(|e| RepoSelectError::Unknown(e.to_string()))?;
+            .map_err(|e| RepoFindOneError::Unknown(e.to_string()))?;
 
         let result = sqlx::query_as::<Sqlite, CoinSql>(
             r#"
@@ -167,7 +167,7 @@ impl Repository<Coin, u32> for SqliteRepository {
 
         match result {
             Ok(coin) => Ok(coin.try_into().unwrap()),
-            Err(e) => Err(super::RepoSelectError::Unknown(e.to_string())),
+            Err(e) => Err(super::RepoFindOneError::Unknown(e.to_string())),
         }
     }
 
@@ -243,6 +243,49 @@ impl Repository<Coin, u32> for SqliteRepository {
         match result {
             Ok(_) => Ok(()),
             Err(e) => Err(RepoDeleteError::Unknown(e.to_string())),
+        }
+    }
+
+    async fn delete_all(&mut self) -> Result<(), RepoDeleteError> {
+        let mut conn = self
+            .conn()
+            .await
+            .map_err(|e| RepoDeleteError::Unknown(e.to_string()))?;
+
+        let result = sqlx::query(
+            r#"
+                    DELETE FROM coins
+                    "#,
+        )
+        .execute(&mut *conn)
+        .await;
+
+        match result {
+            Ok(_) => Ok(()),
+            Err(e) => Err(RepoDeleteError::Unknown(e.to_string())),
+        }
+    }
+
+    async fn get_all(&mut self) -> Result<Vec<Coin>, RepoGetAllError> {
+        let mut conn = self
+            .conn()
+            .await
+            .map_err(|e| super::RepoGetAllError::Unknown(e.to_string()))?;
+
+        let result = sqlx::query_as::<Sqlite, CoinSql>(
+            r#"
+                    SELECT * FROM coins
+                    "#,
+        )
+        .fetch_all(&mut *conn)
+        .await;
+
+        match result {
+            Ok(coins) => Ok(coins
+                .into_iter()
+                .map(|coin| coin.try_into().unwrap())
+                .collect()),
+            Err(e) => Err(super::RepoGetAllError::Unknown(e.to_string())),
         }
     }
 }

@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use crate::driving::tauri::coins::set_token;
 use config::Config;
 use driven::repository::sqlite::SqliteRepository;
 use tauri::{async_runtime::Mutex, Manager, Wry};
@@ -39,7 +38,19 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![set_token])
+        .invoke_handler(tauri::generate_handler![
+            driving::tauri::coins::create_coin,
+            driving::tauri::coins::create_coins,
+            driving::tauri::coins::update_coins,
+            driving::tauri::coins::find_coin,
+            driving::tauri::coins::find_coins,
+            driving::tauri::coins::delete_coin,
+            driving::tauri::coins::delete_all_coins,
+            driving::tauri::coins::get_all_coins,
+            driving::tauri::coins::fetch_coins_by_id,
+            driving::tauri::coins::fetch_coins_by_symbol,
+            driving::tauri::coins::set_cmc_token,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
