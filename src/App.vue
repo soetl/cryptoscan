@@ -6,7 +6,7 @@ import { mdiPencil, mdiPlus } from '@mdi/js';
   <v-app>
     <v-layout>
       <v-app-bar>
-        <template v-slot:extension>
+        <template v-slot:prepend>
           <v-app-bar-nav-icon />
         </template>
 
