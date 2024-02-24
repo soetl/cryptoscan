@@ -1,5 +1,4 @@
 use serde::Serialize;
-use tauri::ipc::IpcResponse;
 use thiserror::Error;
 
 #[derive(Debug, Error, Serialize)]
