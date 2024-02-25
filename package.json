@@ -22,9 +22,5 @@
     "@vitejs/plugin-vue": "^5.0.4",
     "internal-ip": "^7.0.0",
     "vite": "^5.0.0"
-  },
-  "module": "index.ts",
-  "peerDependencies": {
-    "typescript": "^5.0.0"
   }
 }
