@@ -12,6 +12,7 @@ pub enum TauriErrors {
     #[error("CoinMarketCap token not specified")]
     TokenNotSpecified,
     #[error("CoinMarketCap token not valid")]
+    #[allow(dead_code)]
     TokenNotValid,
     #[error("Setting error: {0}")]
     SettingError(#[from] SettingError),

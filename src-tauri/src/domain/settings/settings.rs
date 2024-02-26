@@ -8,6 +8,7 @@ pub enum SettingError {
     #[error("Invalid data: {0}")]
     InvalidData(String),
     #[error("Unknown error: {0}")]
+    #[allow(dead_code)]
     Unknown(String),
 }
 
