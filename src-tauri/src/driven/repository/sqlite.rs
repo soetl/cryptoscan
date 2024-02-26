@@ -3,11 +3,13 @@ use sqlx::{migrate::MigrateDatabase, pool::PoolConnection, FromRow, Pool, Sqlite
 
 use crate::{
     config::SqtliteConfig,
-    domain::{coin::Coin, Value},
+    domain::{coin::coin::Coin, settings::settings::Setting, Value},
     driven::repository::{RepoCreateError, Repository},
 };
 
-use super::{RepoDeleteError, RepoFindAllError, RepoGetAllError, RepoFindOneError, RepoUpdateError};
+use super::{
+    RepoDeleteError, RepoFindAllError, RepoFindOneError, RepoGetAllError, RepoUpdateError,
+};
 
 pub(crate) const SQLITE_LOCAL_PATH: &str = "databases";
 pub(crate) const SQLITE_FILE: &str = "data.db";
@@ -74,6 +76,7 @@ pub(crate) struct SqliteRepository {
 }
 
 impl SqliteRepository {
+    #[allow(unused)]
     pub fn new(config: &SqtliteConfig) -> Self {
         #[cfg(mobile)]
         let db_url = format!("sqlite:/{}", config.db_path);
@@ -290,6 +293,166 @@ impl Repository<Coin, u32> for SqliteRepository {
             Ok(coins) => Ok(coins
                 .into_iter()
                 .map(|coin| coin.try_into().unwrap())
+                .collect()),
+            Err(e) => Err(super::RepoGetAllError::Unknown(e.to_string())),
+        }
+    }
+}
+
+impl Repository<Setting, String> for SqliteRepository {
+    async fn create(&mut self, entity: Setting) -> Result<Setting, RepoCreateError> {
+        let mut conn = self
+            .conn()
+            .await
+            .map_err(|e| RepoCreateError::Unknown(e.to_string()))?;
+
+        let result = sqlx::query(
+            r#"
+            INSERT INTO settings (key, value) 
+            VALUES (?, ?)
+            ON CONFLICT(key) DO UPDATE SET
+                value = excluded.value;
+            "#,
+        )
+        .bind(entity.key().value())
+        .bind(entity.value().value())
+        .execute(&mut *conn)
+        .await;
+
+        match result {
+            Ok(_) => Ok(entity),
+            Err(e) => Err(RepoCreateError::Unknown(e.to_string())),
+        }
+    }
+
+    async fn find_one(&mut self, entity: String) -> Result<Setting, RepoFindOneError> {
+        let mut conn = self
+            .conn()
+            .await
+            .map_err(|e| RepoFindOneError::Unknown(e.to_string()))?;
+
+        let result = sqlx::query_as::<Sqlite, (String, String)>(
+            r#"
+                    SELECT * FROM settings WHERE key = ?
+                    "#,
+        )
+        .bind(entity)
+        .fetch_one(&mut *conn)
+        .await;
+
+        match result {
+            Ok((key, value)) => Ok(Setting::new(key, value).unwrap()),
+            Err(e) => Err(super::RepoFindOneError::Unknown(e.to_string())),
+        }
+    }
+
+    async fn find_all(&mut self, entity: String) -> Result<Vec<Setting>, RepoFindAllError> {
+        let mut conn = self
+            .conn()
+            .await
+            .map_err(|e| super::RepoFindAllError::Unknown(e.to_string()))?;
+
+        let result = sqlx::query_as::<Sqlite, (String, String)>(
+            r#"
+                    SELECT * FROM settings WHERE key = ?
+                    "#,
+        )
+        .bind(entity)
+        .fetch_all(&mut *conn)
+        .await;
+
+        match result {
+            Ok(settings) => Ok(settings
+                .into_iter()
+                .map(|(key, value)| Setting::new(key, value).unwrap())
+                .collect()),
+            Err(e) => Err(super::RepoFindAllError::Unknown(e.to_string())),
+        }
+    }
+
+    async fn update(&mut self, entity: Setting) -> Result<Setting, RepoUpdateError> {
+        let mut conn = self
+            .conn()
+            .await
+            .map_err(|e| RepoUpdateError::Unknown(e.to_string()))?;
+
+        let result = sqlx::query(
+            r#"
+            UPDATE settings
+            SET value = ?
+            WHERE key = ?
+            "#,
+        )
+        .bind(entity.value().value())
+        .bind(entity.key().value())
+        .execute(&mut *conn)
+        .await;
+
+        match result {
+            Ok(_) => Ok(entity),
+            Err(e) => Err(RepoUpdateError::Unknown(e.to_string())),
+        }
+    }
+
+    async fn delete(&mut self, entity: String) -> Result<(), RepoDeleteError> {
+        let mut conn = self
+            .conn()
+            .await
+            .map_err(|e| RepoDeleteError::Unknown(e.to_string()))?;
+
+        let result = sqlx::query(
+            r#"
+                    DELETE FROM settings WHERE key = ?
+                    "#,
+        )
+        .bind(entity)
+        .execute(&mut *conn)
+        .await;
+
+        match result {
+            Ok(_) => Ok(()),
+            Err(e) => Err(RepoDeleteError::Unknown(e.to_string())),
+        }
+    }
+
+    async fn delete_all(&mut self) -> Result<(), RepoDeleteError> {
+        let mut conn = self
+            .conn()
+            .await
+            .map_err(|e| RepoDeleteError::Unknown(e.to_string()))?;
+
+        let result = sqlx::query(
+            r#"
+                    DELETE FROM settings
+                    "#,
+        )
+        .execute(&mut *conn)
+        .await;
+
+        match result {
+            Ok(_) => Ok(()),
+            Err(e) => Err(RepoDeleteError::Unknown(e.to_string())),
+        }
+    }
+
+    async fn get_all(&mut self) -> Result<Vec<Setting>, RepoGetAllError> {
+        let mut conn = self
+            .conn()
+            .await
+            .map_err(|e| super::RepoGetAllError::Unknown(e.to_string()))?;
+
+        let result = sqlx::query_as::<Sqlite, (String, String)>(
+            r#"
+                    SELECT * FROM settings
+                    "#,
+        )
+        .fetch_all(&mut *conn)
+        .await;
+
+        match result {
+            Ok(settings) => Ok(settings
+                .into_iter()
+                .map(|(key, value)| Setting::new(key, value).unwrap())
                 .collect()),
             Err(e) => Err(super::RepoGetAllError::Unknown(e.to_string())),
         }

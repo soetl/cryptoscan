@@ -1,6 +1,8 @@
 use serde::Serialize;
 use thiserror::Error;
 
+use crate::domain::settings::settings::SettingError;
+
 #[derive(Debug, Error, Serialize)]
 pub enum TauriErrors {
     #[error("Unknown error: {0}")]
@@ -11,4 +13,6 @@ pub enum TauriErrors {
     TokenNotSpecified,
     #[error("CoinMarketCap token not valid")]
     TokenNotValid,
+    #[error("Setting error: {0}")]
+    SettingError(#[from] SettingError),
 }

@@ -6,7 +6,7 @@ use tauri::State;
 use validator::Validate;
 
 use crate::{
-    domain::{self, coin::{self, Coin}, Value},
+    domain::{self, coin::coin::Coin, Value},
     fetch::coinmarketcap::{fetch_ids, fetch_symbols},
     AppState,
 };
@@ -171,7 +171,7 @@ pub(crate) async fn create_coin(
 ) -> Result<String, TauriErrors> {
     request.validate()?;
 
-    let result = domain::create_coin::create_coin(state.sqlite_repo.clone(), request).await;
+    let result = domain::coin::create_coin::create_coin(state.sqlite_repo.clone(), request).await;
 
     match result {
         Ok(coin) => Ok(serde_json::to_string(&CoinResponse::from(coin)).unwrap()),
@@ -189,7 +189,7 @@ pub(crate) async fn create_coins(
     let mut result = vec![];
 
     for coin in request.coins {
-        match domain::create_coin::create_coin(state.sqlite_repo.clone(), coin).await {
+        match domain::coin::create_coin::create_coin(state.sqlite_repo.clone(), coin).await {
             Ok(coin) => result.push(CoinResponse::from(coin)),
             Err(e) => return Err(TauriErrors::UnknownError(e.to_string())),
         }
@@ -199,7 +199,10 @@ pub(crate) async fn create_coins(
 }
 
 #[tauri::command]
-pub(crate) async fn update_coins(request: UpdateCoinsRequest, state: State<'_, Arc<AppState>>,) -> Result<String, TauriErrors> {
+pub(crate) async fn update_coins(
+    request: UpdateCoinsRequest,
+    state: State<'_, Arc<AppState>>,
+) -> Result<String, TauriErrors> {
     request.validate()?;
 
     let store = state.store.lock().await;
@@ -219,7 +222,8 @@ pub(crate) async fn update_coins(request: UpdateCoinsRequest, state: State<'_, A
             let mut result = vec![];
 
             for coin in coins.coins {
-                match domain::update_coin::update_coin(state.sqlite_repo.clone(), coin).await {
+                match domain::coin::update_coin::update_coin(state.sqlite_repo.clone(), coin).await
+                {
                     Ok(coin) => result.push(CoinResponse::from(coin)),
                     Err(e) => return Err(TauriErrors::UnknownError(e.to_string())),
                 }
@@ -232,30 +236,39 @@ pub(crate) async fn update_coins(request: UpdateCoinsRequest, state: State<'_, A
 }
 
 #[tauri::command]
-pub(crate) async fn find_coin(request: FindCoinRequest, state: State<'_, Arc<AppState>>) -> Result<String, TauriErrors> {
+pub(crate) async fn find_coin(
+    request: FindCoinRequest,
+    state: State<'_, Arc<AppState>>,
+) -> Result<String, TauriErrors> {
     request.validate()?;
 
-    match domain::find_coin::find_coin(state.sqlite_repo.clone(), request.id).await {
+    match domain::coin::find_coin::find_coin(state.sqlite_repo.clone(), request.id).await {
         Ok(coin) => Ok(serde_json::to_string(&CoinResponse::from(coin)).unwrap()),
         Err(e) => Err(TauriErrors::UnknownError(e.to_string())),
     }
 }
 
 #[tauri::command]
-pub(crate) async fn find_coins(request: FindCoinRequest, state: State<'_, Arc<AppState>>) -> Result<String, TauriErrors> {
+pub(crate) async fn find_coins(
+    request: FindCoinRequest,
+    state: State<'_, Arc<AppState>>,
+) -> Result<String, TauriErrors> {
     request.validate()?;
 
-    match domain::find_coin::find_coins(state.sqlite_repo.clone(), request.id).await {
+    match domain::coin::find_coin::find_coins(state.sqlite_repo.clone(), request.id).await {
         Ok(coins) => Ok(serde_json::to_string(&CoinsResponse::from(coins).coins).unwrap()),
         Err(e) => Err(TauriErrors::UnknownError(e.to_string())),
     }
 }
 
 #[tauri::command]
-pub(crate) async fn delete_coin(request: DeleteCoinRequest, state: State<'_, Arc<AppState>>) -> Result<(), TauriErrors> {
+pub(crate) async fn delete_coin(
+    request: DeleteCoinRequest,
+    state: State<'_, Arc<AppState>>,
+) -> Result<(), TauriErrors> {
     request.validate()?;
 
-    match domain::delete_coin::delete_coin(state.sqlite_repo.clone(), request.id).await {
+    match domain::coin::delete_coin::delete_coin(state.sqlite_repo.clone(), request.id).await {
         Ok(_) => Ok(()),
         Err(e) => Err(TauriErrors::UnknownError(e.to_string())),
     }
@@ -263,7 +276,7 @@ pub(crate) async fn delete_coin(request: DeleteCoinRequest, state: State<'_, Arc
 
 #[tauri::command]
 pub(crate) async fn delete_all_coins(state: State<'_, Arc<AppState>>) -> Result<(), TauriErrors> {
-    match domain::delete_coin::delete_all_coins(state.sqlite_repo.clone()).await {
+    match domain::coin::delete_coin::delete_all_coins(state.sqlite_repo.clone()).await {
         Ok(_) => Ok(()),
         Err(e) => Err(TauriErrors::UnknownError(e.to_string())),
     }
@@ -271,7 +284,7 @@ pub(crate) async fn delete_all_coins(state: State<'_, Arc<AppState>>) -> Result<
 
 #[tauri::command]
 pub(crate) async fn get_all_coins(state: State<'_, Arc<AppState>>) -> Result<String, TauriErrors> {
-    match domain::get_all_coins::get_all_coins(state.sqlite_repo.clone()).await {
+    match domain::coin::get_all_coins::get_all_coins(state.sqlite_repo.clone()).await {
         Ok(coins) => Ok(serde_json::to_string(&CoinsResponse::from(coins).coins).unwrap()),
         Err(e) => Err(TauriErrors::UnknownError(e.to_string())),
     }

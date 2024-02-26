@@ -33,7 +33,7 @@ pub fn run() {
             let state = AppState {
                 config,
                 store,
-                sqlite_repo
+                sqlite_repo,
             };
 
             app.manage(Arc::new(state));
@@ -52,6 +52,8 @@ pub fn run() {
             driving::tauri::coins::fetch_coins_by_id,
             driving::tauri::coins::fetch_coins_by_symbol,
             driving::tauri::coins::set_cmc_token,
+            driving::tauri::settings::create_setting,
+            driving::tauri::settings::find_setting,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
