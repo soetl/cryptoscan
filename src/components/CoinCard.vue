@@ -27,21 +27,19 @@ const percentColor = computed(() => {
 </script>
 
 <template>
-  <v-card :title="coin.symbol + ' - ' + coin.name">
+  <v-card class="mx-2 mb-2" :title="coin.symbol + ' - ' + coin.name">
     <template v-slot:prepend>
-      <v-card>
-        <v-img
-          width="42"
-          :aspect-ratio="1 / 1"
-          :src="
-            'https://s2.coinmarketcap.com/static/img/coins/64x64/' +
-            coin.id +
-            '.png'
-          "
-          cover
-          :alt="coin.symbol"
-        />
-      </v-card>
+      <v-img
+        width="42"
+        :aspect-ratio="1 / 1"
+        :src="
+          'https://s2.coinmarketcap.com/static/img/coins/64x64/' +
+          coin.id +
+          '.png'
+        "
+        cover
+        :alt="coin.symbol"
+      />
     </template>
     <template v-slot:append>
       <v-btn
@@ -57,7 +55,9 @@ const percentColor = computed(() => {
     <v-card-text class="d-flex">
       {{ coin.price }}
       <v-spacer />
-      <span :style="{ color: percentColor }">{{ coin.percent_change_24h }}</span>
+      <span :style="{ color: percentColor }">{{
+        coin.percent_change_24h
+      }}</span>
     </v-card-text>
   </v-card>
 </template>
