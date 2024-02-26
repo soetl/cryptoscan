@@ -19,21 +19,27 @@ pub async fn find_coin<R: Repository<Coin, u32>>(
     repository: Arc<Mutex<R>>,
     id: u32,
 ) -> Result<Coin, FindError> {
-    repository.lock().await.find_one(id).await.map_err(|e| {
-        match e {
+    repository
+        .lock()
+        .await
+        .find_one(id)
+        .await
+        .map_err(|e| match e {
             RepoFindOneError::Unknown(e) => FindError::Unknown(e),
             RepoFindOneError::NotFound => FindError::NotFound,
-        }
-    })
+        })
 }
 
 pub async fn find_coins<R: Repository<Coin, u32>>(
     repository: Arc<Mutex<R>>,
     id: u32,
 ) -> Result<Vec<Coin>, FindError> {
-    repository.lock().await.find_all(id).await.map_err(|e| {
-        match e {
+    repository
+        .lock()
+        .await
+        .find_all(id)
+        .await
+        .map_err(|e| match e {
             RepoFindAllError::Unknown(e) => FindError::Unknown(e),
-        }
-    })
+        })
 }

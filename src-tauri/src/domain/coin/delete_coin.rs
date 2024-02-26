@@ -21,23 +21,29 @@ pub async fn delete_coin<R: Repository<Coin, u32>>(
     repository: Arc<Mutex<R>>,
     id: u32,
 ) -> Result<(), DeleteError> {
-    repository.lock().await.delete(id).await.map_err(|e| {
-        match e {
+    repository
+        .lock()
+        .await
+        .delete(id)
+        .await
+        .map_err(|e| match e {
             RepoDeleteError::InvalidData(e) => DeleteError::InvalidData(e),
             RepoDeleteError::Unknown(e) => DeleteError::Unknown(e),
             RepoDeleteError::NotFound => DeleteError::NotFound,
-        }
-    })
+        })
 }
 
 pub async fn delete_all_coins<R: Repository<Coin, u32>>(
     repository: Arc<Mutex<R>>,
 ) -> Result<(), DeleteError> {
-    repository.lock().await.delete_all().await.map_err(|e| {
-        match e {
+    repository
+        .lock()
+        .await
+        .delete_all()
+        .await
+        .map_err(|e| match e {
             RepoDeleteError::InvalidData(e) => DeleteError::InvalidData(e),
             RepoDeleteError::Unknown(e) => DeleteError::Unknown(e),
             RepoDeleteError::NotFound => DeleteError::NotFound,
-        }
-    })
+        })
 }

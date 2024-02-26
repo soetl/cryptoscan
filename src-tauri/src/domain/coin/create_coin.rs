@@ -24,10 +24,13 @@ pub async fn create_coin<R: Repository<Coin, u32>>(
 ) -> Result<Coin, CreateError> {
     let coin = Coin::from(coin);
 
-    repository.lock().await.create(coin).await.map_err(|e| {
-        match e {
+    repository
+        .lock()
+        .await
+        .create(coin)
+        .await
+        .map_err(|e| match e {
             RepoCreateError::InvalidData(e) => CreateError::InvalidData(e),
             RepoCreateError::Unknown(e) => CreateError::Unknown(e),
-        }
-    })
+        })
 }
