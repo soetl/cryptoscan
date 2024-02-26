@@ -7,7 +7,7 @@ use crate::driven::repository::{RepoFindOneError, Repository};
 
 use super::settings::Setting;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Clone)]
 pub enum FindError {
     #[error("Unknown error: {0}")]
     Unknown(String),

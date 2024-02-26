@@ -57,6 +57,7 @@ impl TryFrom<String> for SettingValue {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Setting {
     key: SettingKey,
     value: SettingValue,

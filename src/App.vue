@@ -1,16 +1,12 @@
 <script setup>
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
-import { Store } from "@tauri-apps/plugin-store";
-
 import { mdiPencil, mdiPlus } from "@mdi/js";
 
 import CoinCard from "./components/CoinCard.vue";
 import AddCoinDialog from "./components/dialogs/AddCoinDialog.vue";
 import ChooseCoinsDialog from "./components/dialogs/ChooseCoinsDialog.vue";
 import SetTokenDialog from "./components/dialogs/SetTokenDialog.vue";
-
-const store = new Store(".settings.bin");
 
 const theme = ref("light");
 const navDrawer = ref(false);
@@ -33,21 +29,15 @@ coins.value.push({
   percent_change_24h: 0,
 });
 
-store
-  .get("theme")
-  .then((result) => {
-    if (result) {
-      theme.value = result;
-    }
-  })
-  .catch((_) => "light");
+findSetting("theme").then((result) => {
+  if (result) {
+    theme.value = result.value;
+  }
+});
 
 function toggleTheme() {
   theme.value = theme.value === "light" ? "dark" : "light";
-  store.set("theme", theme.value);
-  store.save().then((_) => {
-    console.log("Saved theme");
-  });
+  createSetting("theme", theme.value);
 }
 
 async function addCoin(symbol) {
@@ -84,8 +74,17 @@ function removeCoin(id, symbol) {
 
 function setToken(token) {
   if (token) {
-    setCMCToken(token);
-    setTokenDialog.value = false;
+    createSetting("api_key", token).then((result) => {
+      if (result) {
+        console.log("API key set: ", result);
+        snackbarText.value = "API key set";
+        snackbar.value = true;
+        setTokenDialog.value = false;
+      } else {
+        snackbarText.value = "Error setting API key";
+        snackbar.value = true;
+      }
+    });
   }
 }
 
@@ -211,22 +210,33 @@ async function fetchCoinsBySymbol(coin_symbol_list) {
       console.log("Error fetching coins by symbol: ", error);
       snackbarText.value = error;
       snackbar.value = true;
-      console.error(error);
       return [];
     });
 }
 
-function setCMCToken(token) {
-  invoke("set_cmc_token", { token: token })
+async function createSetting(key, value) {
+  return invoke("create_setting", { request: { key, value } })
     .then((result) => {
-      console.log("Set CMC token: ", result);
-      snackbarText.value = "Set CMC token";
-      snackbar.value = true;
+      return JSON.parse(result);
     })
     .catch((error) => {
       snackbarText.value = error;
       snackbar.value = true;
-      console.error(error);
+      console.error("Error creating setting: ", error);
+      return "";
+    });
+}
+
+async function findSetting(key) {
+  return invoke("find_setting", { request: key })
+    .then((result) => {
+      return JSON.parse(result);
+    })
+    .catch((error) => {
+      snackbarText.value = error;
+      snackbar.value = true;
+      console.error("Error finding setting: ", error);
+      return "";
     });
 }
 

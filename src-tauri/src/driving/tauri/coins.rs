@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 use tauri::State;
 use validator::Validate;
 
@@ -205,15 +204,16 @@ pub(crate) async fn update_coins(
 ) -> Result<String, TauriErrors> {
     request.validate()?;
 
-    let store = state.store.lock().await;
+    let token_result: Result<domain::settings::settings::Setting, domain::settings::find_setting::FindError> = domain::settings::find_setting::find_setting(
+        state.sqlite_repo.clone(),
+        "api_key".to_string(),
+    ).await;
 
-    let Some(token_value) = store.get("token") else {
+    let Ok(token_value) = token_result else {
         return Err(TauriErrors::TokenNotSpecified);
     };
 
-    let Some(token) = token_value.as_str() else {
-        return Err(TauriErrors::TokenNotValid);
-    };
+    let token = token_value.value().value();
 
     let result = fetch_ids(request.ids, token.to_string()).await;
 
@@ -297,15 +297,16 @@ pub(crate) async fn fetch_coins_by_id(
 ) -> Result<String, TauriErrors> {
     request.validate()?;
 
-    let store = state.store.lock().await;
+    let token_result: Result<domain::settings::settings::Setting, domain::settings::find_setting::FindError> = domain::settings::find_setting::find_setting(
+        state.sqlite_repo.clone(),
+        "api_key".to_string(),
+    ).await;
 
-    let Some(token_value) = store.get("token") else {
+    let Ok(token_value) = token_result else {
         return Err(TauriErrors::TokenNotSpecified);
     };
 
-    let Some(token) = token_value.as_str() else {
-        return Err(TauriErrors::TokenNotValid);
-    };
+    let token = token_value.value().value();
 
     let result = fetch_ids(request.ids, token.to_string()).await;
 
@@ -322,42 +323,21 @@ pub(crate) async fn fetch_coins_by_symbol(
 ) -> Result<String, TauriErrors> {
     request.validate()?;
 
-    let store = state.store.lock().await;
+    let token_result = domain::settings::find_setting::find_setting(
+        state.sqlite_repo.clone(),
+        "api_key".to_string(),
+    ).await;
 
-    let Some(token_value) = store.get("token") else {
+    let Ok(token_value) = token_result else {
         return Err(TauriErrors::TokenNotSpecified);
     };
 
-    let Some(token) = token_value.as_str() else {
-        return Err(TauriErrors::TokenNotValid);
-    };
+    let token = token_value.value().value();
 
     let result = fetch_symbols(request.symbols, token.to_string()).await;
 
     match result {
         Ok(coins) => Ok(serde_json::to_string(&coins.coins).unwrap()),
         Err(e) => Err(TauriErrors::UnknownError(e)),
-    }
-}
-
-#[tauri::command]
-pub(crate) async fn set_cmc_token(
-    token: String,
-    state: State<'_, Arc<AppState>>,
-) -> Result<(), TauriErrors> {
-    if token.is_empty() {
-        return Err(TauriErrors::TokenNotValid);
-    }
-
-    match state
-        .store
-        .lock()
-        .await
-        .insert("token".to_string(), json!(token))
-    {
-        Ok(_) => Ok(()),
-        Err(_) => {
-            return Err(TauriErrors::UnknownError("Error setting token".to_string()));
-        }
     }
 }

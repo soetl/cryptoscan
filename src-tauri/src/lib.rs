@@ -1,9 +1,8 @@
-use std::{path::PathBuf, sync::Arc};
+use std::sync::Arc;
 
 use config::Config;
 use driven::repository::sqlite::SqliteRepository;
-use tauri::{async_runtime::Mutex, Manager, Wry};
-use tauri_plugin_store::{Store, StoreBuilder};
+use tauri::{async_runtime::Mutex, Manager};
 
 mod config;
 mod domain;
@@ -14,7 +13,6 @@ mod fetch;
 struct AppState {
     #[allow(dead_code)]
     config: config::Config,
-    store: Mutex<Store<Wry>>,
     sqlite_repo: Arc<Mutex<SqliteRepository>>,
 }
 
@@ -22,17 +20,12 @@ struct AppState {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_store::Builder::default().build())
         .setup(|app| {
             let config = Config::from(String::from(app.path().app_data_dir()?.to_str().unwrap()));
-            let store_path = PathBuf::from("store.bin");
-            let store = StoreBuilder::new(store_path).build(app.handle().clone());
-            let store = Mutex::new(store);
             let sqlite_repo = Arc::new(Mutex::new(SqliteRepository::new(&config.sqlite)));
 
             let state = AppState {
                 config,
-                store,
                 sqlite_repo,
             };
 
@@ -51,7 +44,6 @@ pub fn run() {
             driving::tauri::coins::get_all_coins,
             driving::tauri::coins::fetch_coins_by_id,
             driving::tauri::coins::fetch_coins_by_symbol,
-            driving::tauri::coins::set_cmc_token,
             driving::tauri::settings::create_setting,
             driving::tauri::settings::find_setting,
         ])

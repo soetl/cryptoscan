@@ -32,7 +32,7 @@ impl From<Setting> for SettingResponse {
 }
 
 #[tauri::command]
-pub async fn create_setting(request: CreateSettingRequest, state: State<'_, Arc<AppState>>,) -> Result<SettingResponse, TauriErrors> {
+pub async fn create_setting(request: CreateSettingRequest, state: State<'_, Arc<AppState>>,) -> Result<String, TauriErrors> {
     request.validate()?;
 
     let result = domain::settings::create_setting::create_setting(
@@ -41,17 +41,17 @@ pub async fn create_setting(request: CreateSettingRequest, state: State<'_, Arc<
     ).await;
 
     match result {
-        Ok(setting) => Ok(SettingResponse::from(setting)),
+        Ok(setting) => Ok(serde_json::to_string(&SettingResponse::from(setting)).unwrap()),
         Err(e) => Err(TauriErrors::UnknownError(e.to_string())),
     }
 }
 
 #[tauri::command]
-pub async fn find_setting(request: String, state: State<'_, Arc<AppState>>) -> Result<SettingResponse, TauriErrors> {
+pub async fn find_setting(request: String, state: State<'_, Arc<AppState>>) -> Result<String, TauriErrors> {
     let result = domain::settings::find_setting::find_setting(state.sqlite_repo.clone(), request).await;
 
     match result {
-        Ok(setting) => Ok(SettingResponse::from(setting)),
+        Ok(setting) => Ok(serde_json::to_string(&SettingResponse::from(setting)).unwrap()),
         Err(e) => Err(TauriErrors::UnknownError(e.to_string())),
     }
 }

@@ -51,6 +51,7 @@ const percentColor = computed(() => {
       >
         <v-icon color="error" :icon="mdiDelete" />
       </v-btn>
+      <p v-else>{{ coin.last_updated }}</p>
     </template>
     <v-card-text class="d-flex">
       {{ coin.price }}

@@ -22,7 +22,6 @@ sqlx = { version = "0.7.3", features = ["sqlite", "runtime-tokio"] }
 tauri = { version = "2.0.0-beta.6", features = ["devtools"] }
 tauri-plugin-log =  "2.0.0-beta.1"
 tauri-plugin-shell = "2.0.0-beta.1"
-tauri-plugin-store = "2.0.0-beta.1"
 thiserror = "1.0.57"
 tokio = { version = "1.36.0", features = ["rt"] }
 validator = { version = "0.16.1", features = ["derive"] }
