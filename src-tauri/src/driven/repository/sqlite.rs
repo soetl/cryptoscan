@@ -75,11 +75,17 @@ pub(crate) struct SqliteRepository {
 
 impl SqliteRepository {
     pub fn new(config: &SqtliteConfig) -> Self {
+        #[cfg(mobile)]
+        let db_url = format!("sqlite:/{}", config.db_path);
+        #[cfg(not(mobile))]
         let db_url = format!("sqlite:{}/{}", SQLITE_LOCAL_PATH, SQLITE_FILE);
 
         Self {
             pool: PoolWrapper::NotExists,
             db_url,
+            #[cfg(mobile)]
+            db_path: config.db_path.clone(),
+            #[cfg(not(mobile))]
             db_path: format!("{}/{}", SQLITE_LOCAL_PATH, SQLITE_FILE),
         }
     }

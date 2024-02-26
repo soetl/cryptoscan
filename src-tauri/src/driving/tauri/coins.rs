@@ -6,7 +6,7 @@ use tauri::State;
 use validator::Validate;
 
 use crate::{
-    domain::{self, coin::Coin, Value},
+    domain::{self, coin::{self, Coin}, Value},
     fetch::coinmarketcap::{fetch_ids, fetch_symbols},
     AppState,
 };
@@ -195,7 +195,7 @@ pub(crate) async fn create_coins(
         }
     }
 
-    Ok(serde_json::to_string(&CoinsResponse { coins: result }).unwrap())
+    Ok(serde_json::to_string(&result).unwrap())
 }
 
 #[tauri::command]
@@ -225,7 +225,7 @@ pub(crate) async fn update_coins(request: UpdateCoinsRequest, state: State<'_, A
                 }
             }
 
-            Ok(serde_json::to_string(&CoinsResponse { coins: result }).unwrap())
+            Ok(serde_json::to_string(&result).unwrap())
         }
         Err(e) => Err(TauriErrors::UnknownError(e)),
     }
@@ -246,7 +246,7 @@ pub(crate) async fn find_coins(request: FindCoinRequest, state: State<'_, Arc<Ap
     request.validate()?;
 
     match domain::find_coin::find_coins(state.sqlite_repo.clone(), request.id).await {
-        Ok(coins) => Ok(serde_json::to_string(&CoinsResponse::from(coins)).unwrap()),
+        Ok(coins) => Ok(serde_json::to_string(&CoinsResponse::from(coins).coins).unwrap()),
         Err(e) => Err(TauriErrors::UnknownError(e.to_string())),
     }
 }
@@ -272,7 +272,7 @@ pub(crate) async fn delete_all_coins(state: State<'_, Arc<AppState>>) -> Result<
 #[tauri::command]
 pub(crate) async fn get_all_coins(state: State<'_, Arc<AppState>>) -> Result<String, TauriErrors> {
     match domain::get_all_coins::get_all_coins(state.sqlite_repo.clone()).await {
-        Ok(coins) => Ok(serde_json::to_string(&CoinsResponse::from(coins)).unwrap()),
+        Ok(coins) => Ok(serde_json::to_string(&CoinsResponse::from(coins).coins).unwrap()),
         Err(e) => Err(TauriErrors::UnknownError(e.to_string())),
     }
 }
@@ -297,7 +297,7 @@ pub(crate) async fn fetch_coins_by_id(
     let result = fetch_ids(request.ids, token.to_string()).await;
 
     match result {
-        Ok(coins) => Ok(serde_json::to_string(&CoinsResponse::from(coins)).unwrap()),
+        Ok(coins) => Ok(serde_json::to_string(&coins.coins).unwrap()),
         Err(e) => Err(TauriErrors::UnknownError(e)),
     }
 }
@@ -322,7 +322,7 @@ pub(crate) async fn fetch_coins_by_symbol(
     let result = fetch_symbols(request.symbols, token.to_string()).await;
 
     match result {
-        Ok(coins) => Ok(serde_json::to_string(&CoinsResponse::from(coins)).unwrap()),
+        Ok(coins) => Ok(serde_json::to_string(&coins.coins).unwrap()),
         Err(e) => Err(TauriErrors::UnknownError(e)),
     }
 }
@@ -342,7 +342,7 @@ pub(crate) async fn set_cmc_token(
         .await
         .insert("token".to_string(), json!(token))
     {
-        Ok(_) => return Ok(()),
+        Ok(_) => Ok(()),
         Err(_) => {
             return Err(TauriErrors::UnknownError("Error setting token".to_string()));
         }
