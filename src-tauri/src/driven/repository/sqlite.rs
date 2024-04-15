@@ -93,26 +93,28 @@ impl SqliteRepository {
         }
     }
 
+    async fn create_pool() -> Result<Pool<Sqlite>, sqlx::Error> {
+        if !sqlx::Sqlite::database_exists(&self.db_url).await? {
+            std::fs::create_dir_all(&self.db_path.rsplit_once("/").unwrap().0).unwrap();
+            Sqlite::create_database(&self.db_url).await?;
+        }
+
+        let pool = Pool::<Sqlite>::connect_lazy(&self.db_url)?;
+        sqlx::migrate!("./migrations").run(&pool).await?;
+        Ok(pool)
+    }
+
     pub async fn conn(&mut self) -> Result<PoolConnection<Sqlite>, sqlx::Error> {
         use PoolWrapper::*;
 
         match &self.pool {
             Exists(pool) => pool.acquire().await,
             NotExists => {
-                if !sqlx::Sqlite::database_exists(&self.db_url).await? {
-                    std::fs::create_dir_all(&self.db_path.rsplit_once("/").unwrap().0).unwrap();
-                    Sqlite::create_database(&self.db_url).await?;
-                }
+                let pool = self.create_pool().await?;
+                let conn = pool.acquire().await?;
 
-                self.pool = Exists(Pool::<Sqlite>::connect_lazy(&self.db_url)?);
-
-                let Exists(pool) = &self.pool else {
-                    unreachable!()
-                };
-
-                sqlx::migrate!("./migrations").run(pool).await?;
-
-                pool.acquire().await
+                self.pool = Exists(pool);
+                conn
             }
         }
     }
