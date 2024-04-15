@@ -1,3 +1,4 @@
+#![allow(unused)]
 use serde::{Deserialize, Serialize};
 use sqlx::{migrate::MigrateDatabase, pool::PoolConnection, FromRow, Pool, Sqlite};
 
@@ -76,7 +77,6 @@ pub(crate) struct SqliteRepository {
 }
 
 impl SqliteRepository {
-    #[allow(unused)]
     pub fn new(config: &SqtliteConfig) -> Self {
         #[cfg(mobile)]
         let db_url = format!("sqlite:/{}", config.db_path);
