@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { mdiPencil, mdiPlus } from "@mdi/js";
 
@@ -240,7 +240,13 @@ async function findSetting(key) {
     });
 }
 
-getAllCoins();
+onMounted(() => {
+  getAllCoins();
+  
+  setInterval(() => {
+    updateCoins(coins.value);
+  }, 60000);
+});
 </script>
 
 <template>

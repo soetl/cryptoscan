@@ -16,10 +16,9 @@ const props = defineProps({
 
 const emit = defineEmits(["removeCoin"]);
 
-const showDetails = computed(() => {
-  return !(props.coin.price == 0 && props.coin.percent_change_24h == 0);
+const minimizedPriceSize = computed(() => {
+  return props.coin.price > 0.01 ? props.coin.price.toFixed(2) : props.coin.price;
 });
-const theme = ref("light");
 
 const percentColor = computed(() => {
   return props.coin.percent_change_24h > 0 ? "green" : "red";
@@ -51,14 +50,14 @@ const percentColor = computed(() => {
       >
         <v-icon color="error" :icon="mdiDelete" />
       </v-btn>
-      <p v-else>{{ coin.last_updated }}</p>
+      <!-- <p v-else>{{ coin.last_updated }}</p> -->
     </template>
     <v-card-text class="d-flex">
-      {{ coin.price }}
+      {{ minimizedPriceSize }}$
       <v-spacer />
       <span :style="{ color: percentColor }">{{
-        coin.percent_change_24h
-      }}</span>
+        coin.percent_change_24h.toFixed(2)
+      }}%</span>
     </v-card-text>
   </v-card>
 </template>
