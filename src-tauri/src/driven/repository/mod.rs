@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 pub(crate) mod sqlite;
 
 use thiserror::Error;
@@ -7,7 +8,6 @@ use crate::domain::Entity;
 #[derive(Error, Debug)]
 pub(crate) enum RepoCreateError {
     #[error("Invalid data: {0}")]
-    #[allow(dead_code)]
     InvalidData(String),
     #[error("Unknown error: {0}")]
     Unknown(String),
@@ -16,7 +16,6 @@ pub(crate) enum RepoCreateError {
 #[derive(Error, Debug)]
 pub(crate) enum RepoFindOneError {
     #[error("Not found")]
-    #[allow(dead_code)]
     NotFound,
     #[error("Unknown error: {0}")]
     Unknown(String),
@@ -31,10 +30,8 @@ pub(crate) enum RepoFindAllError {
 #[derive(Error, Debug)]
 pub(crate) enum RepoUpdateError {
     #[error("Not found")]
-    #[allow(dead_code)]
     NotFound,
     #[error("Invalid data: {0}")]
-    #[allow(dead_code)]
     InvalidData(String),
     #[error("Unknown error: {0}")]
     Unknown(String),
@@ -43,10 +40,8 @@ pub(crate) enum RepoUpdateError {
 #[derive(Error, Debug)]
 pub(crate) enum RepoDeleteError {
     #[error("Not found")]
-    #[allow(dead_code)]
     NotFound,
     #[error("Invalid data: {0}")]
-    #[allow(dead_code)]
     InvalidData(String),
     #[error("Unknown error: {0}")]
     Unknown(String),

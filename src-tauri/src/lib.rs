@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::sync::Arc;
 
 use config::Config;
@@ -11,7 +12,6 @@ mod driving;
 mod fetch;
 
 struct AppState {
-    #[allow(dead_code)]
     config: config::Config,
     sqlite_repo: Arc<Mutex<SqliteRepository>>,
 }
